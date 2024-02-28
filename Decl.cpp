@@ -2522,27 +2522,6 @@ bool VarDecl::isUsableInConstantExpressions(const ASTContext &Context) const {
   return true;
 }
 
-/// Convert the initializer for this declaration to the elaborated EvaluatedStmt
-/// form, which contains extra information on the evaluated value of the
-/// initializer.
-EvaluatedStmt *VarDecl::ensureEvaluatedStmt() const {
-  auto *Eval = Init.dyn_cast<EvaluatedStmt *>();
-  if (!Eval) {
-    // Note: EvaluatedStmt contains an APValue, which usually holds
-    // resources not allocated from the ASTContext.  We need to do some
-    // work to avoid leaking those, but we do so in VarDecl::evaluateValue
-    // where we can detect whether there's anything to clean up or not.
-    Eval = new (getASTContext()) EvaluatedStmt;
-    Eval->Value = Init.get<Stmt *>();
-    Init = Eval;
-  }
-  return Eval;
-}
-
-EvaluatedStmt *VarDecl::getEvaluatedStmt() const {
-  return Init.dyn_cast<EvaluatedStmt *>();
-}
-
 APValue *VarDecl::evaluateValue() const {
   SmallVector<PartialDiagnosticAt, 8> Notes;
   return evaluateValueImpl(Notes, hasConstantInitialization());
